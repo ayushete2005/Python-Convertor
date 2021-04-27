@@ -1,4 +1,6 @@
 import os
+from PIL import Image
+import sys
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from PyPDF2 import PdfFileReader, PdfFileWriter
@@ -32,9 +34,30 @@ def index():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            process_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), filename)
+            process_file(os.path.join(
+                app.config['UPLOAD_FOLDER'], filename), filename)
             return redirect(url_for('uploaded_file', filename=filename))
     return render_template('index.html')
+
+
+@app.route('/jpg2pdf', methods=['GET', 'POST'])
+def JPG2PDF():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            print('No file attached in request')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            print('No file selected')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            print(os.path.join(
+                app.config['UPLOAD_FOLDER'], filename))
+            print(filename)
+    return render_template('JPGConverter.html')
+
 
 
 def process_file(path, filename):
@@ -59,6 +82,5 @@ def uploaded_file(filename):
     return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
 
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    app.run(debug=True)
